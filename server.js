@@ -96,19 +96,26 @@ app.post('/deletetask', function (req, res) {
 
 app.post('/newtask', function (req, res) {
     let details = req.body;
-    let task = new Tasks({
-        name: details.taskname,
-        assign: new mongoose.Types.ObjectId(details.assignto),
-        due: new Date(details.duedate),
-        status: details.taskstatus,
-        desc: details.taskdesc
-    });
-    task.save(function (err) {
-        if (err) {
-            res.send(err);
+    Developers.findById(new mongoose.Types.ObjectId(details.assignto), function (err, result) {
+        console.log(result);
+        if (result) {
+            let task = new Tasks({
+                name: details.taskname,
+                assign: new mongoose.Types.ObjectId(details.assignto),
+                due: new Date(details.duedate),
+                status: details.taskstatus,
+                desc: details.taskdesc
+            });
+            task.save(function (err) {
+                if (err) {
+                    res.send(err);
+                } else {
+                    console.log('Saved!');
+                    res.redirect('/listtasks');
+                }
+            });
         } else {
-            console.log('Saved!');
-            res.redirect('/listtasks');
+            res.send("Developer does not exist!!!");
         }
     });
 });
@@ -150,5 +157,17 @@ app.post('/newdev', function (req, res) {
         }
     });
 });
+
+app.get("/:oldfirstname/:newfirstname", function (req, res) {
+    Developers.updateMany({
+        'name.firstName': req.params.oldfirstname
+    }, {
+        $set: {
+            'name.firstName': req.params.newfirstname
+        }
+    }, function (err, result) {
+        res.redirect('/listdevs');
+    });
+})
 
 app.listen(8080);
